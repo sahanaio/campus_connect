@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusConnect | REVA University Student Opportunities Platform</title>
+  <meta name="description" content="Centralized student opportunities platform for REVA University (CSE/AIML) with automated eligibility verification and TF-IDF AI recommendations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <aside class="top-banner">
+    <div class="container banner-inner">
+      <div class="banner-tag">
+        <span class="pulse-dot"></span> REVA UNIVERSITY • DEPT. OF CSE (AIML)
+      </div>
+      <div class="banner-text">
+        Semester-End Capstone Project — Automated Eligibility Checking & Content-Based Recommendation Engine
+      </div>
+      <div class="banner-actions">
+        <button id="trigger-scheduler-btn" class="btn-text-gold" title="Simulate Daily Cron Deadline Check">
+          ⚡ Run Deadline Cron Scan
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <div class="brand">
+        <div class="brand-logo">
+          <div class="logo-shield">CC</div>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Campus<span class="accent-gold">Connect</span></span>
+          <span class="brand-subtitle">REVA University • Opportunities Platform</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-links" id="main-nav">
+        <button class="nav-item active" data-tab="all">
+          <span class="nav-icon">🌐</span> All Opportunities
+        </button>
+        <button class="nav-item" data-tab="recommended">
+          <span class="nav-icon">✨</span> AI Recommendations
+        </button>
+        <button class="nav-item" data-tab="eligible">
+          <span class="nav-icon">🎯</span> Qualified Only
+        </button>
+        <button class="nav-item" data-tab="saved">
+          <span class="nav-icon">⭐</span> Bookmarks (<span id="saved-count">0</span>)
+        </button>
+        <button class="nav-item" data-tab="applied">
+          <span class="nav-icon">📋</span> Applied (<span id="applied-count">0</span>)
+        </button>
+        <button class="nav-item admin-tab" data-tab="admin" id="admin-nav-item">
+          <span class="nav-icon">⚙️</span> Admin Portal
+        </button>
+      </nav>
+
+      <!-- User Actions & Persona Switcher -->
+      <div class="nav-actions">
+        <!-- Auth Sign In / Register Trigger -->
+        <button id="auth-modal-btn" class="btn-text-gold" title="Sign In with REVA Email">
+          🔐 Sign In
+        </button>
+
+        <!-- Persona Quick Selector (Ideal for Viva / Lab Evaluation) -->
+        <div class="persona-selector-wrap" title="Switch Student Profile for Testing Eligibility Rules">
+          <label for="persona-select" class="sr-only">Switch Demo Profile</label>
+          <span class="persona-label">Persona:</span>
+          <select id="persona-select" class="persona-select">
+            <option value="usr_sahana">Sahana M (AIML Sem 6 | 8.85 CGPA | 0 Backlogs)</option>
+            <option value="usr_rahul">Rahul S (CSE Sem 4 | 7.20 CGPA | 1 Backlog)</option>
+            <option value="usr_ananya">Ananya R (AIML Sem 8 | 9.30 CGPA | 0 Backlogs)</option>
+            <option value="usr_admin">Dr. C. Ramesh (Faculty Admin / Coordinator)</option>
+          </select>
+        </div>
+
+        <!-- Notification Bell -->
+        <button id="notif-bell-btn" class="icon-button" title="View Notifications & Deadlines" aria-label="Notifications">
+          <span class="icon">🔔</span>
+          <span id="notif-badge" class="badge-count hidden">0</span>
+        </button>
+
+        <!-- Edit Profile Trigger -->
+        <button id="profile-edit-btn" class="profile-avatar-btn" title="View / Edit Profile">
+          <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250" alt="Student Profile Avatar" class="avatar-img">
+          <div class="avatar-info">
+            <span id="nav-user-name" class="user-name">Sahana M</span>
+            <span id="nav-user-role" class="user-role">AIML • Sem 6</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero & Student Stats Section -->
+  <section class="hero-section">
+    <div class="container hero-container">
+      <div class="hero-welcome">
+        <div class="student-badge">
+          <span class="reva-tag">REVA AIML</span>
+          <span class="student-session" id="hero-student-meta">Sahana M • 8.85 CGPA • 0 Backlogs</span>
+        </div>
+        <h1 class="hero-title">
+          Smart Opportunities Matched to <span class="gradient-text">Your Profile</span>
+        </h1>
+        <p class="hero-desc">
+          Automated rule-based verification filters opportunities across Internships, Hackathons, Workshops, Scholarships, Certifications, and Part-time jobs so you only focus on what you're qualified for.
+        </p>
+
+        <!-- Search Bar -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search by role, company, technology (e.g. Python, Bosch, Hackathon, AWS)..." autocomplete="off">
+          <button id="clear-search-btn" class="clear-btn hidden" aria-label="Clear Search">✕</button>
+        </div>
+      </div>
+
+      <!-- Quick KPI Cards -->
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-icon bg-blue">📚</div>
+          <div class="stat-meta">
+            <span class="stat-value" id="kpi-total">8</span>
+            <span class="stat-label">Total Listings</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-green">✅</div>
+          <div class="stat-meta">
+            <span class="stat-value" id="kpi-eligible">6</span>
+            <span class="stat-label">Verified Eligible</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-purple">✨</div>
+          <div class="stat-meta">
+            <span class="stat-value" id="kpi-top-match">92%</span>
+            <span class="stat-label">AI Top Match</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-amber">⏳</div>
+          <div class="stat-meta">
+            <span class="stat-value" id="kpi-deadlines">3</span>
+            <span class="stat-label">Urgent Deadlines</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Filter Bar -->
+  <section class="filters-section">
+    <div class="container filters-container">
+      <div class="category-pills" id="category-pills">
+        <button class="pill active" data-type="all">All Categories</button>
+        <button class="pill" data-type="internships">💼 Internships</button>
+        <button class="pill" data-type="hackathons">⚡ Hackathons</button>
+        <button class="pill" data-type="workshops">🛠️ Workshops</button>
+        <button class="pill" data-type="certifications">📜 Certifications</button>
+        <button class="pill" data-type="scholarships">🎓 Scholarships</button>
+        <button class="pill" data-type="part-time">⏱️ Part-Time</button>
+      </div>
+
+      <div class="view-controls">
+        <span class="result-counter" id="result-counter">Showing 8 opportunities</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="container main-content">
+
+    <!-- Active View Header -->
+    <div class="view-header" id="view-header">
+      <div>
+        <h2 class="view-title" id="view-title">All Opportunities</h2>
+        <p class="view-desc" id="view-desc">Explore verified campus events, internships, and scholarships for REVA University students.</p>
+      </div>
+      <div id="view-header-actions" class="view-header-actions">
+        <!-- In AI recommendations view, show formula trigger -->
+        <button id="show-tfidf-info-btn" class="btn-outline-gold hidden">
+          🧠 Recommender Math Breakdown (TF-IDF)
+        </button>
+        <!-- In Admin view, show new opportunity trigger -->
+        <button id="admin-create-trigger-btn" class="btn-primary-reva hidden">
+          ➕ Post New Opportunity
+        </button>
+      </div>
+    </div>
+
+    <!-- Opportunities Grid Container -->
+    <div class="opportunities-grid" id="opportunities-grid">
+      <!-- Opportunity Cards Rendered Dynamically via JavaScript -->
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Evaluating eligibility criteria & calculating recommendations...</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state hidden" id="empty-state">
+      <div class="empty-icon">🔎</div>
+      <h3>No matching opportunities found</h3>
+      <p id="empty-state-msg">Try clearing filters or switching search keywords.</p>
+      <button class="btn-secondary" id="reset-filter-btn">Reset All Filters</button>
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: ELIGIBILITY BREAKDOWN MODAL            -->
+  <!-- ============================================== -->
+  <dialog id="eligibility-modal" class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge" id="modal-eligibility-badge">Eligibility Verification</span>
+        <h3 id="modal-opp-title">AI & Deep Learning Research Intern</h3>
+        <p id="modal-opp-organizer" class="modal-subtitle">Robert Bosch Center for AI</p>
+      </div>
+      <button class="modal-close-btn" id="close-eligibility-modal" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Profile comparison overview banner -->
+      <div class="comparison-banner" id="modal-comparison-banner">
+        <div class="comparison-user">
+          <div class="user-meta-title">Candidate Profile</div>
+          <div class="user-meta-sub" id="modal-student-name">Sahana M (AIML Sem 6)</div>
+        </div>
+        <div class="comparison-score-wrap">
+          <div class="score-circle" id="modal-score-circle">100%</div>
+          <div class="score-status" id="modal-score-status">Fully Eligible</div>
+        </div>
+      </div>
+
+      <!-- Criteria Checklist -->
+      <div class="criteria-section">
+        <h4>Eligibility Evaluation Breakdown</h4>
+        <p class="section-subtext">The Automated Rule Engine executes strict multi-factor criteria checking before authorizing applications:</p>
+        
+        <div class="rules-list" id="modal-rules-list">
+          <!-- Dynamic passed / failed criteria checklist rendered here -->
+        </div>
+      </div>
+
+      <!-- Raw Rules Details -->
+      <div class="criteria-meta-box">
+        <h5>Official Opportunity Requirements</h5>
+        <div class="meta-grid" id="modal-raw-rules-grid">
+          <!-- Min CGPA, Branches, Semesters, Max Backlogs, Required Skills -->
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" id="modal-save-btn">⭐ Bookmark Opportunity</button>
+      <a href="#" target="_blank" rel="noopener noreferrer" class="btn-primary" id="modal-apply-btn">
+        Proceed to Apply ↗
+      </a>
+    </div>
+  </dialog>
+
+  <!-- ============================================== -->
+  <!-- MODAL: TF-IDF & COSINE SIMILARITY EXPLAINER    -->
+  <!-- ============================================== -->
+  <dialog id="tfidf-modal" class="custom-modal large-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge ai-badge">AIML Recommendation Engine</span>
+        <h3>Content-Based Filtering via TF-IDF & Cosine Similarity</h3>
+        <p class="modal-subtitle">Mathematical formulation designed for Department of CSE (AIML), REVA University</p>
+      </div>
+      <button class="modal-close-btn" id="close-tfidf-modal" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="math-explainer-card">
+        <div class="math-block">
+          <strong>1. Term Frequency (TF):</strong>
+          <code>TF(t, d) = count(t in d) / total_words(d)</code>
+        </div>
+        <div class="math-block">
+          <strong>2. Inverse Document Frequency (IDF):</strong>
+          <code>IDF(t) = ln( (1 + N) / (1 + DF(t)) ) + 1</code>
+        </div>
+        <div class="math-block">
+          <strong>3. Cosine Similarity Vector Space Metric:</strong>
+          <code>CosSim(Student, Opp) = (V_student • V_opp) / (||V_student|| × ||V_opp||)</code>
+        </div>
+      </div>
+
+      <div class="student-vector-box">
+        <h4>Extracted Student Feature Vector</h4>
+        <div class="tags-container" id="tfidf-student-tags">
+          <!-- Dynamically populated student skill & interest tokens -->
+        </div>
+      </div>
+
+      <div class="ranking-preview-box">
+        <h4>Top Opportunity Similarity Matrix</h4>
+        <table class="math-table" id="tfidf-ranking-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Opportunity Title</th>
+              <th>Type</th>
+              <th>Overlap Keywords</th>
+              <th>Cosine Sim</th>
+              <th>Match %</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" id="close-tfidf-btn">Understood</button>
+    </div>
+  </dialog>
+
+  <!-- ============================================== -->
+  <!-- DRAWER: NOTIFICATIONS & DEADLINES CENTER       -->
+  <!-- ============================================== -->
+  <div id="notif-drawer-backdrop" class="drawer-backdrop hidden"></div>
+  <aside id="notif-drawer" class="drawer hidden">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <h3>🔔 Notifications & Reminders</h3>
+        <span class="badge-count-static" id="drawer-unread-count">0 unread</span>
+      </div>
+      <button id="close-drawer-btn" class="modal-close-btn" aria-label="Close Notifications">✕</button>
+    </div>
+
+    <div class="drawer-actions">
+      <button id="mark-all-read-btn" class="btn-small-text">Mark all as read</button>
+      <button id="trigger-scan-btn-drawer" class="btn-small-gold">⚡ Scan Deadlines</button>
+    </div>
+
+    <div class="drawer-content" id="drawer-notifs-list">
+      <!-- Notification cards rendered here -->
+    </div>
+  </aside>
+
+  <!-- ============================================== -->
+  <!-- MODAL: EDIT STUDENT PROFILE                   -->
+  <!-- ============================================== -->
+  <dialog id="profile-modal" class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge">Student Profile</span>
+        <h3>Update Academic & Skill Parameters</h3>
+        <p class="modal-subtitle">Updating these values automatically re-runs Eligibility and AI Recommendations!</p>
+      </div>
+      <button class="modal-close-btn" id="close-profile-modal" aria-label="Close">✕</button>
+    </div>
+
+    <form id="profile-form" class="modal-body form-grid">
+      <div class="form-group">
+        <label for="prof-name">Full Name</label>
+        <input type="text" id="prof-name" required>
+      </div>
+      <div class="form-group">
+        <label for="prof-branch">Department / Branch</label>
+        <select id="prof-branch">
+          <option value="AIML">CSE (AI & ML) - REVA University</option>
+          <option value="CSE">Computer Science & Engineering (CSE)</option>
+          <option value="ISE">Information Science & Engineering (ISE)</option>
+          <option value="ECE">Electronics & Communication (ECE)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="prof-sem">Current Semester</label>
+        <select id="prof-sem">
+          <option value="1">Semester 1</option>
+          <option value="2">Semester 2</option>
+          <option value="3">Semester 3</option>
+          <option value="4">Semester 4</option>
+          <option value="5">Semester 5</option>
+          <option value="6">Semester 6</option>
+          <option value="7">Semester 7</option>
+          <option value="8">Semester 8</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="prof-cgpa">Current Cumulative CGPA (0.0 - 10.0)</label>
+        <input type="number" id="prof-cgpa" step="0.01" min="0" max="10" required>
+      </div>
+      <div class="form-group">
+        <label for="prof-backlogs">Active Backlogs Count</label>
+        <input type="number" id="prof-backlogs" min="0" max="10" required>
+      </div>
+      <div class="form-group full-width">
+        <label for="prof-skills">Technical Skills (Comma separated)</label>
+        <input type="text" id="prof-skills" placeholder="Python, Machine Learning, TensorFlow, React, SQL">
+      </div>
+      <div class="form-group full-width">
+        <label for="prof-interests">Interests & Domains (Comma separated)</label>
+        <input type="text" id="prof-interests" placeholder="Artificial Intelligence, Computer Vision, Hackathons, Cloud">
+      </div>
+      <div class="form-actions full-width">
+        <button type="button" class="btn-secondary" id="cancel-profile-btn">Cancel</button>
+        <button type="submit" class="btn-primary">Save Profile & Recompute</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============================================== -->
+  <!-- MODAL: ADMIN OPPORTUNITY CREATOR              -->
+  <!-- ============================================== -->
+  <dialog id="admin-modal" class="custom-modal large-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge admin-badge">Faculty / Admin Portal</span>
+        <h3>Create New Opportunity with Eligibility Rules</h3>
+        <p class="modal-subtitle">Automatically notifies qualified students upon submission</p>
+      </div>
+      <button class="modal-close-btn" id="close-admin-modal" aria-label="Close">✕</button>
+    </div>
+
+    <form id="admin-create-form" class="modal-body form-grid">
+      <div class="form-group full-width">
+        <label for="opp-title">Opportunity Title *</label>
+        <input type="text" id="opp-title" required placeholder="e.g. AI Research Intern, Smart India Hackathon...">
+      </div>
+      <div class="form-group">
+        <label for="opp-type">Opportunity Type *</label>
+        <select id="opp-type" required>
+          <option value="internships">Internship</option>
+          <option value="hackathons">Hackathon</option>
+          <option value="workshops">Workshop</option>
+          <option value="certifications">Certification</option>
+          <option value="scholarships">Scholarship</option>
+          <option value="part-time">Part-Time Opportunity</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="opp-organizer">Host / Company / Organizer *</label>
+        <input type="text" id="opp-organizer" required placeholder="e.g. Robert Bosch AI, IEEE REVA, Swiggy...">
+      </div>
+      <div class="form-group">
+        <label for="opp-location">Location</label>
+        <input type="text" id="opp-location" placeholder="e.g. REVA Campus, Bengaluru (Hybrid), Online">
+      </div>
+      <div class="form-group">
+        <label for="opp-stipend">Stipend / Prize Pool / Grant</label>
+        <input type="text" id="opp-stipend" placeholder="e.g. ₹35,000 / month, ₹2,00,000 Prize, 100% Voucher">
+      </div>
+      <div class="form-group">
+        <label for="opp-duration">Duration</label>
+        <input type="text" id="opp-duration" placeholder="e.g. 6 Months, 36 Hours, 2 Days">
+      </div>
+      <div class="form-group">
+        <label for="opp-deadline">Application Deadline *</label>
+        <input type="date" id="opp-deadline" required>
+      </div>
+      <div class="form-group full-width">
+        <label for="opp-link">Official Application URL</label>
+        <input type="url" id="opp-link" placeholder="https://careers.company.com/apply">
+      </div>
+      <div class="form-group full-width">
+        <label for="opp-desc">Description & Roles</label>
+        <textarea id="opp-desc" rows="3" placeholder="Brief outline of problem statements, responsibilities, and benefits..."></textarea>
+      </div>
+      <div class="form-group full-width">
+        <label for="opp-tags">Tags & Keywords (Comma separated)</label>
+        <input type="text" id="opp-tags" placeholder="Python, Machine Learning, React, AWS, NLP">
+      </div>
+
+      <!-- Eligibility Rules Section Builder -->
+      <div class="form-group full-width rules-builder-box">
+        <h4 class="rules-builder-title">⚙️ Eligibility Rule Builder (Automated Verification)</h4>
+        <div class="rules-inputs-grid">
+          <div class="rule-field">
+            <label for="rule-min-cgpa">Minimum CGPA (0.0 - 10.0)</label>
+            <input type="number" id="rule-min-cgpa" step="0.1" min="0" max="10" value="7.0">
+          </div>
+          <div class="rule-field">
+            <label for="rule-max-backlogs">Maximum Active Backlogs Permitted</label>
+            <input type="number" id="rule-max-backlogs" min="0" max="10" value="0">
+          </div>
+          <div class="rule-field full-width">
+            <label>Permitted Departments / Branches</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="rule-branch" value="AIML" checked> AIML</label>
+              <label><input type="checkbox" name="rule-branch" value="CSE" checked> CSE</label>
+              <label><input type="checkbox" name="rule-branch" value="ISE"> ISE</label>
+              <label><input type="checkbox" name="rule-branch" value="ECE"> ECE</label>
+            </div>
+          </div>
+          <div class="rule-field full-width">
+            <label>Permitted Semesters</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" name="rule-sem" value="1"> Sem 1</label>
+              <label><input type="checkbox" name="rule-sem" value="2"> Sem 2</label>
+              <label><input type="checkbox" name="rule-sem" value="3"> Sem 3</label>
+              <label><input type="checkbox" name="rule-sem" value="4"> Sem 4</label>
+              <label><input type="checkbox" name="rule-sem" value="5" checked> Sem 5</label>
+              <label><input type="checkbox" name="rule-sem" value="6" checked> Sem 6</label>
+              <label><input type="checkbox" name="rule-sem" value="7" checked> Sem 7</label>
+              <label><input type="checkbox" name="rule-sem" value="8" checked> Sem 8</label>
+            </div>
+          </div>
+          <div class="rule-field full-width">
+            <label for="rule-skills">Mandatory Required Skills (Comma separated)</label>
+            <input type="text" id="rule-skills" placeholder="e.g. Python, Machine Learning">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions full-width">
+        <button type="button" class="btn-secondary" id="cancel-admin-btn">Cancel</button>
+        <button type="submit" class="btn-primary">Publish & Dispatch Student Alerts</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ============================================== -->
+  <!-- MODAL: OPPORTUNITY FULL DETAILS VIEW           -->
+  <!-- ============================================== -->
+  <dialog id="detail-modal" class="custom-modal large-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge" id="detail-type-badge">Internship</span>
+        <h3 id="detail-title">AI & Deep Learning Research Intern</h3>
+        <p id="detail-organizer" class="modal-subtitle">Robert Bosch Center for AI & REVA Research Park</p>
+      </div>
+      <button class="modal-close-btn" id="close-detail-modal" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="detail-kpi-grid">
+        <div class="detail-kpi-card">
+          <span class="detail-kpi-label">Stipend / Prize</span>
+          <span class="detail-kpi-val" id="detail-stipend">₹35,000 / month</span>
+        </div>
+        <div class="detail-kpi-card">
+          <span class="detail-kpi-label">Location</span>
+          <span class="detail-kpi-val" id="detail-location">Bengaluru (Hybrid)</span>
+        </div>
+        <div class="detail-kpi-card">
+          <span class="detail-kpi-label">Duration</span>
+          <span class="detail-kpi-val" id="detail-duration">6 Months</span>
+        </div>
+        <div class="detail-kpi-card">
+          <span class="detail-kpi-label">Deadline</span>
+          <span class="detail-kpi-val" id="detail-deadline">In 3 Days</span>
+        </div>
+      </div>
+
+      <!-- Eligibility summary box inside detail view -->
+      <div class="card-match-banner" id="detail-eligibility-banner">
+        <div id="detail-eligibility-text">✅ Verified Eligible (100% Criteria Met)</div>
+        <div class="ai-match-pill" id="detail-aimatch-pill">✨ 85% AI Match</div>
+      </div>
+
+      <div class="detail-section">
+        <h4>📋 Overview & Role Description</h4>
+        <p id="detail-desc" class="detail-desc-text">Opportunity description goes here...</p>
+      </div>
+
+      <div class="detail-section">
+        <h4>🏷️ Technologies & Domain Tags</h4>
+        <div class="tags-row" id="detail-tags-row"></div>
+      </div>
+
+      <div class="criteria-meta-box">
+        <h5>Official Opportunity Criteria</h5>
+        <div class="meta-grid" id="detail-rules-grid"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" id="detail-bookmark-btn">⭐ Bookmark</button>
+      <button class="btn-primary" id="detail-apply-action-btn">📝 Submit Application</button>
+      <a href="#" target="_blank" rel="noopener noreferrer" class="btn-secondary" id="detail-external-link">Official Portal ↗</a>
+    </div>
+  </dialog>
+
+  <!-- ============================================== -->
+  <!-- MODAL: AUTHENTICATION (LOGIN / SIGN UP)        -->
+  <!-- ============================================== -->
+  <dialog id="auth-modal" class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-badge">REVA University SSO</span>
+        <h3>Student & Faculty Authentication</h3>
+        <p class="modal-subtitle">Sign in with your @reva.edu.in institutional credentials</p>
+      </div>
+      <button class="modal-close-btn" id="close-auth-modal" aria-label="Close">✕</button>
+    </div>
+
+    <div class="auth-tabs-row">
+      <button type="button" class="auth-tab-btn active" id="auth-tab-login">Sign In</button>
+      <button type="button" class="auth-tab-btn" id="auth-tab-signup">Register Account</button>
+    </div>
+
+    <!-- Sign In Form -->
+    <form id="login-form" class="modal-body form-grid">
+      <div class="form-group full-width">
+        <label for="login-email">REVA University Email</label>
+        <input type="email" id="login-email" placeholder="name.branch@reva.edu.in" required value="sahana.m@reva.edu.in">
+      </div>
+      <div class="form-group full-width">
+        <label for="login-password">Password / PIN</label>
+        <input type="password" id="login-password" placeholder="••••••••" required value="campus2026">
+      </div>
+
+      <!-- Quick Demo Accounts -->
+      <div class="form-group full-width demo-accounts-box">
+        <span class="demo-label">Quick Examiner Demo Login:</span>
+        <div class="demo-btns-wrap">
+          <button type="button" class="demo-btn" data-email="sahana.m@reva.edu.in">Sahana (AIML Sem 6)</button>
+          <button type="button" class="demo-btn" data-email="rahul.s@reva.edu.in">Rahul (CSE Sem 4)</button>
+          <button type="button" class="demo-btn" data-email="c.ramesh@reva.edu.in">Dr. Ramesh (Admin)</button>
+        </div>
+      </div>
+
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary full-width">Sign In to CampusConnect</button>
+      </div>
+    </form>
+
+    <!-- Sign Up Form (hidden by default) -->
+    <form id="signup-form" class="modal-body form-grid hidden">
+      <div class="form-group full-width">
+        <label for="reg-name">Full Name *</label>
+        <input type="text" id="reg-name" required placeholder="e.g. Sahana M">
+      </div>
+      <div class="form-group full-width">
+        <label for="reg-email">REVA University Email *</label>
+        <input type="email" id="reg-email" required placeholder="student.branch@reva.edu.in">
+      </div>
+      <div class="form-group">
+        <label for="reg-branch">Department / Branch</label>
+        <select id="reg-branch">
+          <option value="AIML">CSE (AI & ML)</option>
+          <option value="CSE">Computer Science & Engineering</option>
+          <option value="ISE">Information Science</option>
+          <option value="ECE">Electronics & Comm.</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="reg-sem">Semester</label>
+        <select id="reg-sem">
+          <option value="1">Sem 1</option>
+          <option value="2">Sem 2</option>
+          <option value="3">Sem 3</option>
+          <option value="4">Sem 4</option>
+          <option value="5">Sem 5</option>
+          <option value="6" selected>Sem 6</option>
+          <option value="7">Sem 7</option>
+          <option value="8">Sem 8</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="reg-cgpa">Cumulative CGPA</label>
+        <input type="number" id="reg-cgpa" step="0.01" min="0" max="10" value="8.50" required>
+      </div>
+      <div class="form-group">
+        <label for="reg-backlogs">Active Backlogs</label>
+        <input type="number" id="reg-backlogs" min="0" max="10" value="0" required>
+      </div>
+      <div class="form-group full-width">
+        <label for="reg-skills">Technical Skills (Comma separated)</label>
+        <input type="text" id="reg-skills" placeholder="Python, PyTorch, React, SQL, Cloud">
+      </div>
+      <div class="form-group full-width">
+        <label for="reg-interests">Interests (Comma separated)</label>
+        <input type="text" id="reg-interests" placeholder="Machine Learning, Hackathons, Research">
+      </div>
+      <div class="form-actions full-width">
+        <button type="submit" class="btn-primary full-width">Create REVA Student Account</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <div class="footer-left">
+        <strong>CampusConnect</strong> • Student Opportunities Platform
+        <p>Department of Computer Science and Engineering (AIML) • REVA University, Bengaluru</p>
+      </div>
+      <div class="footer-right">
+        <span>Semester-End Capstone Project</span>
+        <span>HTML5 • CSS3 • JavaScript (ES6+) • Node.js • Supabase</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/engines.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
